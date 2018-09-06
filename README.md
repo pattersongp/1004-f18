@@ -1,9 +1,9 @@
-# 1004-Summer
+# 1004-f18
 
 Resources for running COMS W1004 @ Columbia
 
 ## Environment Setup
-I would recommend using a virtualenv, but here are the installation intructions:
+I would recommend using a virtualenv. Here are the installation intructions:
 
 Most of these grading scripts are written in Python 3.
 
@@ -22,6 +22,7 @@ Once you have installed Python and Pip, you need to install the following librar
 ## Descriptions for all three programs
 
 ### make_grading_sheet.py
+This script allows you to create a grading sheet to be used by TAs to enter student score's for each part of the assignment. It will output a CSV file (output.csv) that includes 'Name', 'ID', 'UNI', 'Section', 'Late (TRUE/FALSE)'.
 ```
 usage: make_grading_sheet.py [-h] -f STUDENT_GRADES -a ASSN_ID -d DEADLINE
                              [--grace GRACE]
@@ -30,35 +31,17 @@ Builds the grading sheet for you, merging the students grades from courseworks
 and checks whether they submitted their assignment on time or not.
 
 arguments:
-  -h, --help         show this help message and exit
-  -f STUDENT_GRADES  Canvas grades csv file
+  -h, --help         show this help message
+  -f STUDENT_GRADES  Canvas grades csv file see student data
   -a ASSN_ID         Assignment ID
   -d DEADLINE        Assignment deadline : Y-m-d-H:M:S
   --grace GRACE      Grace hours, defaults to 2
 ```
-
-### codio_ontime_scraper.py
-```
-usage: codio_ontime_scraper.py [-h] -c CODIO_SHEET -p OUTPUT_CSV -d DEADLINE
-                               [-o OPTIONAL_NAME]
-
-Produces a file output.csv that will have the students' marked for an ontime
-or late submission based on the csv file you downloaded from Codio website.
-
-arguments:
-  -h, --help            show this help message and exit
-  -c CODIO_SHEET, --codio CODIO_SHEET
-                        Codio csv downloaded from Codio module
-  -p OUTPUT_CSV, --previous OUTPUT_CSV
-                        output.csv from the previously ran
-                        make_grading_sheet.py
-  -d DEADLINE, --deadline DEADLINE
-                        The deadline of the assignment as: Y-m-d-H:M:S
-  -o OPTIONAL_NAME, --output OPTIONAL_NAME
-                        name of the file created by this script
-```
+#### Student Grades
+You need to provide information on students in the class (for this section, we'll call this students.csv). To get this, login to Canvas, go to the class you're working with --> Grades --> Download Current Scores (.csv).
 
 ### postgrades.py
+Script for posting grades to canvas through the Canvas API.
 ```
 usage: postgrades.py [-h] -f GRADING_SHEET -a ASSN_ID -p PUSH_GRADE
 
@@ -79,15 +62,40 @@ arguments:
                         post to Canvas True/False
 ```
 
-## Everything below here is informational
-For running the scripts, please see the usage above.
 
 
+### codio_ontime_scraper.py
+This script produces a file 
+```
+usage: codio_ontime_scraper.py [-h] -c CODIO_SHEET -p OUTPUT_CSV -d DEADLINE
+                               [-o OPTIONAL_NAME]
+
+Produces a file output.csv that will have the students' marked for an ontime
+or late submission based on the csv file you downloaded from Codio website.
+
+arguments:
+  -h, --help            show this help message and exit
+  -c CODIO_SHEET, --codio CODIO_SHEET
+                        Codio csv downloaded from Codio module
+  -p OUTPUT_CSV, --previous OUTPUT_CSV
+                        output.csv from the previously ran
+                        make_grading_sheet.py
+  -d DEADLINE, --deadline DEADLINE
+                        The deadline of the assignment as: Y-m-d-H:M:S
+  -o OPTIONAL_NAME, --output OPTIONAL_NAME
+                        name of the file created by this script
+```
+
+#### output.csv
+You'll need to use the output.csv from `make_grading_sheet.py`.
+
+#### Codio CSV
+You'll need to download the CSV from Codio to know which students marked their assignments as completed and when they submitted their project. Login to your Codio teacher account, go to the Modules for the specific class you're working with and click 'Download CSV'
 
 ## make_grading_sheet.py
-This script allows you to create a grading sheet to be used by TAs to enter student score's for each part of the assignment. It will output a CSV file (output.csv) that includes 'Name', 'ID', 'UNI', 'Section', 'Late (TRUE/FALSE)'.
 
-### What You Need
+
+### Misc
 
 #### `API_URL`
 This should be the link you use to access Canvas.
@@ -125,8 +133,7 @@ In order to tell if a submission is late, you need to provide the time the assig
 #### Setting Grace Period
 In 3134, we tend to offer a grace period for students. This is to reduce the number of emails sent about having submitted an assignment a few minutes late. To handle this for your class, set `GRACE_PERIOD_HOURS` to the number of hours you want to consider within this grace period.
 
-#### Student Data
-You need to provide information on students in the class (for this section, we'll call this students.csv). To get this, login to Canvas, go to the class you're working with --> Grades --> Download Current Scores (.csv). If there is more than 1 section for the class, repeat this step and then merge the files manually (remembering to only include the header this file includes once (ie. remove it when merging in other student data from sections 2+).
+
 
 ### How to Run
 An example for running this file is the following:
