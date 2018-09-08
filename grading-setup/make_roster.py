@@ -4,6 +4,11 @@
 '''
 import argparse, csv, sys
 
+'''
+    Function for parsing the student roster from the Grades tab on courseworks
+
+    returns a list of dictionaries, or False on failure
+'''
 def parse_roster(filename):
     try:
         with open(filename, 'r') as f:
@@ -21,6 +26,9 @@ def parse_roster(filename):
     except OSError:
         return False
 
+'''
+    General function for reading a csv file and returning a list of dictionaries
+'''
 def read_csv(filename):
     try:
         with open(filename, 'r') as f:
@@ -32,6 +40,9 @@ def read_csv(filename):
     except OSError:
         return False
 
+'''
+    General function for writing a list of dictionaries to csv
+'''
 def write_csv(filename, data):
     with open(filename, 'w') as f:
         writer = csv.DictWriter(f, fieldnames=data[0].keys())
