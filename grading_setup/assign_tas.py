@@ -1,4 +1,4 @@
-import argparse, random
+import argparse, random, sys
 from make_roster import parse_roster, read_csv, write_csv
 
 '''
@@ -8,6 +8,7 @@ from make_roster import parse_roster, read_csv, write_csv
     @param roster {list of dictionaries}
 '''
 def distribute_students(ta_list, roster):
+    random.shuffle(ta_list)
     expected = len(roster) // len(ta_list)
     leftovers = len(roster) % len(ta_list)
 
@@ -44,7 +45,6 @@ def distribute_students(ta_list, roster):
 '''
 def assign_tas(ta_list, roster):
     current_student = 0
-    random.shuffle(ta_list)
     for ta in ta_list:
         while ta['assigned'] > 0:
             try:
@@ -58,11 +58,13 @@ def assign_tas(ta_list, roster):
 
 if __name__ == "__main__":
     parse = argparse.ArgumentParser(description="""
+            Script for building the spread sheet for grading assignments
                                     """, add_help=True, prog="assign-tas.py")
     parse.add_argument("-r", "--roster", required=True, dest="student_roster",
                        help="File downloaded from courseworks Grades tab")
-    parse.add_argument("-t", "--ta-roser", required=True, dest="ta_roster",
+    parse.add_argument("-t", "--ta-roster", required=True, dest="ta_roster",
                        help="csv file for with the list of TA's")
+    parse.add_argument("-o", dest="output", help="optional output filename")
     args=vars(parse.parse_args())
 
     roster=parse_roster(args['student_roster'])
@@ -72,7 +74,10 @@ if __name__ == "__main__":
                          .format(args['student_roster'],args['ta_roster']))
         sys.exit(-1)
 
-    ta_list=distribute_students(ta_roster,roster)
+    ta_list = distribute_students(ta_roster,roster)
     annotated_roster = assign_tas(ta_list, roster)
-    write_csv("assignments.csv", roster)
+
+    filename = args['output'] if args['output'] else 'ta-assignments.csv'
+    write_csv(filename, roster,
+              fieldnames=list(annotated_roster[0].keys()) + ['Comments','Total'])
 

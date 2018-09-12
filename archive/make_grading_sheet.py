@@ -6,6 +6,8 @@ import csv
 import pandas as pd
 import sys
 
+from grading_setup.make_roster import read_csv
+
 # Canvas API URL
 API_URL = "https://courseworks2.columbia.edu"
 
@@ -56,7 +58,7 @@ def get_submission_times(canvas, due_date, assn_id):
 def output_result(output_list, filename = "output.csv"):
     with open(filename,'w', newline='') as out:
         csv_out=csv.writer(out)
-        csv_out.writerow(['Name', 'ID', 'UNI', 'Section', 'Late (TRUE/FALSE)'])
+        csv_out.writerow(['Name', 'ID', 'UNI', 'Late (TRUE/FALSE)', 'TA'])
         for row in output_list:
             csv_out.writerow(row)
 
@@ -68,37 +70,51 @@ def clean_date(submit_time):
 def past_grace_period_late(submit_time):
     return submit_time > due_date
 
-def merge_data(student_grades, submission_dict):
+def merge_data(student_filename, ta_filename, submission_dict):
     result = []
-    count = 0
-    for row in student_grades:
-        #hacky way to skip first two rows of grades.csv file
-        if count < 2:
-            count +=1
-            pass
-        else:
-            row = row.strip()
-            row_list = row.split(",")
-            name = str(row_list[1] + " " + row_list[0]).replace('"', '')
-            canvas_id = str(row_list[2])
-            uni = row_list[3]
 
-            #this is hacky and assumes section looks like COMSW3134_001_2018_1 - DATA STRUCTURES IN JAVA
-            #it pulls section by taking the 12th index value which should be the section
-            try:
-                section = row_list[4][12]
-            except:
-                section = ""
+    students = read_csv(student_filename) # returns a list of dictionaries
+    tas      = read_csv(ta_filename)
+    for s in student:
+        s_filtered = {
+                        "name":s['Name'],
+                        "id":s['ID'],
+                        "uni":s['SIS User ID'],
+                        "ta":None,
+                     }
+        result.append(s_filterd)
+    result.sort(key=lambda k: k['name'])
 
-            if canvas_id in submission_dict.keys():
-                output = (name, canvas_id, uni, section, submission_dict[row_list[2]])
-            else:
-                output = (name, canvas_id, uni, section, True)
-                pass
-            result.append(output)
-            count+=1
-        result.sort(key=lambda tup: tup[2])
     return result
+
+    #for row in student_grades:
+    #    #hacky way to skip first two rows of grades.csv file
+    #    if count < 2:
+    #        count +=1
+    #        pass
+    #    else:
+    #        row = row.strip()
+    #        row_list = row.split(",")
+    #        name = str(row_list[1] + " " + row_list[0]).replace('"', '')
+    #        canvas_id = str(row_list[2])
+    #        uni = row_list[3]
+
+    #        #this is hacky and assumes section looks like COMSW3134_001_2018_1 - DATA STRUCTURES IN JAVA
+    #        #it pulls section by taking the 12th index value which should be the section
+    #        try:
+    #            section = row_list[4][12]
+    #        except:
+    #            section = ""
+
+    #        if canvas_id in submission_dict.keys():
+    #            output = (name, canvas_id, uni, section, submission_dict[row_list[2]])
+    #        else:
+    #            output = (name, canvas_id, uni, section, True)
+    #            pass
+    #        result.append(output)
+    #        count+=1
+    #    result.sort(key=lambda tup: tup[2])
+    #return result
 
 if __name__ == "__main__":
     parse = argparse.ArgumentParser(description="""
@@ -110,12 +126,12 @@ if __name__ == "__main__":
     parse.add_argument("-f", required=True, help="Canvas grades csv file", dest="student_grades")
     parse.add_argument("-a", required=True, help="Assignment ID", dest="assn_id")
     parse.add_argument("-d", required=True, help="Assignment deadline : Y-m-d-H:M:S", dest="deadline")
-    parse.add_argument("--grace", default=2, help="Grace hours, defaults to 2", dest="grace")
+    parse.add_argument("-t", required=True, help="TA assignments from assign_tas.py", dest="tas")
     args = vars(parse.parse_args())
 
     deadline = assignment_deadline = datetime.strptime(args['deadline'], "%Y-%m-%d-%H:%M:%S")
     # change hours to whatever your classes grace period is
-    due_date = deadline + timedelta(hours=int(args["grace"]))
+    due_date = deadline + timedelta(hours=0) # int(args["grace"]))
 
     # make sure to change this to timezone you need
     GMT_EST_TIME_DIFFERENCE = 4
@@ -126,10 +142,8 @@ if __name__ == "__main__":
     #returns a dict where key is canvas id and value is boolean for whether assignment was late
     submission_dict = get_submission_times(canvas, args["deadline"], args["assn_id"])
 
-    with open(args["student_grades"], "r") as f:
-        # assumes you have an output.csv that came from making a written homework grading sheet
-        output_result_list = merge_data(f, submission_dict, )
-        output_result(output_result_list)
+    output_result_list = merge_data(args["student_grades"], submission_dict, )
+    output_result(output_result_list)
 
     sys.stdout.write("Successfully created grades sheet\n")
 
