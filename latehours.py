@@ -6,8 +6,8 @@ import argparse, math, sys
 
 # Canvas API URL and Key
 API_URL = "https://courseworks2.columbia.edu"
-API_KEY = "1396~IRD9JnuAmX2mush0297wIRxhGOqREhYkqntq2nSo4vkG0mzrLyRDIKq9O9X6O3E5"
-COURSE_ID = "59635" # YOU MUST FILL THIS IN
+API_KEY = "" # YOU MUST FILL THIS IN
+COURSE_ID = "" # YOU MUST FILL THIS IN
 GMT_EST_TIME_DIFFERENCE = 4
 
 '''
