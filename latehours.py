@@ -104,8 +104,12 @@ if __name__ == "__main__":
     # Script starts here
     canvas = Canvas(API_URL, API_KEY)
     course = canvas.get_course(COURSE_ID)
-    submissions = fetch_submissions(course, assignment_id)
-    curr_hours  = parse_hours(fetch_submissions(course, latehours_id))
+    submissions = fetch_submissions(assignment_id)
+    curr_hours  = parse_hours(fetch_submissions(latehours_id))
+
+    print(curr_hours)
+    sys.exit()
+
     late_subs   = compute_hours(submissions, args["due_date"], curr_hours)
 
     print("Planning to update:")
