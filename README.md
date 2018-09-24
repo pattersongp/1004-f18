@@ -21,47 +21,46 @@ Once you have installed Python and Pip, you need to install the following librar
 
 ## Descriptions for all three programs
 
-### make_grading_sheet.py
-This script allows you to create a grading sheet to be used by TAs to enter student score's for each part of the assignment. It will output a CSV file (output.csv) that includes 'Name', 'ID', 'UNI', 'Section', 'Late (TRUE/FALSE)'.
+### latehours.py
 ```
-usage: make_grading_sheet.py [-h] -f STUDENT_GRADES -a ASSN_ID -d DEADLINE
-                             [--grace GRACE]
+usage: latehours.py [-h] -a ASSN_ID -d DUE_DATE [-p PUSH] [-l LATE_ID]
 
-Builds the grading sheet for you, merging the students grades from courseworks
-and checks whether they submitted their assignment on time or not.
+Updates the late hours against the submission times of the provided assignment
+id. Posts directly to CourseWorks after if argument -p is set
 
-arguments:
-  -h, --help         show this help message
-  -f STUDENT_GRADES  Canvas grades csv file see student data
-  -a ASSN_ID         Assignment ID
-  -d DEADLINE        Assignment deadline : Y-m-d-H:M:S
-  --grace GRACE      Grace hours, defaults to 2
+optional arguments:
+  -h, --help            show this help message and exit
+  -a ASSN_ID, --assignment ASSN_ID
+                        Assignment id found on courseworks
+  -d DUE_DATE, --due-date DUE_DATE
+                        The date-time for due date: Y-m-d-H:M:S
+  -p PUSH, --push PUSH  Push update to courseworks
+  -l LATE_ID, --late LATE_ID
+                        Late Hours assignment ID
 ```
+### assign_tas.py
+```
+usage: assign-tas.py [-h] -r STUDENT_ROSTER -t TA_ROSTER [-o OUTPUT]
+
+Script for building the spread sheet for grading assignments
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -r STUDENT_ROSTER, --roster STUDENT_ROSTER
+                        File downloaded from courseworks Grades tab
+  -t TA_ROSTER, --ta-roster TA_ROSTER
+                        csv file for with the list of TA's
+  -o OUTPUT             optional output filename
+```
+
 #### Student Grades
 You need to provide information on students in the class (for this section, we'll call this students.csv). To get this, login to Canvas, go to the class you're working with --> Grades --> Download Current Scores (.csv).
 
 ### postgrades.py
 Script for posting grades to canvas through the Canvas API.
 ```
-usage: postgrades.py [-h] -f GRADING_SHEET -a ASSN_ID -p PUSH_GRADE
-
-Program for posting grades to Canvas using the Canvas API. The last command
-line argument determines whether or not to push the grades to Canvas or do a
-trial run to see what the output would be. Note that the COURSE_ID_SECTION1
-global at the top is specific to the course that you're tryin to push grades
-to.
-
-arguments:
-  -h, --help            show this help message and exit
-  -f GRADING_SHEET, --file GRADING_SHEET
-                        File with updated grades for postgrades.py to push to
-                        Canvas
-  -a ASSN_ID, --assn-id ASSN_ID
-                        Assignment ID
-  -p PUSH_GRADE, --push PUSH_GRADE
-                        post to Canvas True/False
+  Updating this script <-- 09 18 2018
 ```
-
 ### Misc
 
 #### `API_URL`
