@@ -6,6 +6,7 @@
 '''
 import argparse, csv, sys
 
+NON_STUDENTS = ['Student, Test', 'Spano, Frank']
 
 '''
     Function for parsing the student roster from the Grades tab on courseworks
@@ -22,7 +23,7 @@ def parse_roster(filename):
                           'uni':row['SIS User ID'],
                           'id':row['ID']
                           }
-                if to_add['id']:
+                if to_add['name'] not in NON_STUDENTS and to_add['id']:
                     data.append(to_add)
             return data
     except OSError:
