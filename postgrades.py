@@ -35,10 +35,11 @@ def process_grading_sheet(grades, push_grade):
         canvas_id = grades['id'][i]
         total_score = grades['Total'][i]
         comments = grades['Comments'][i]
+        ta = geades['ta'][i]
         if pd.isnull(comments):
             comments = "No comments from TAs."
         comments = "\n{}\n".format(comments)
-        comment_message = make_comment(row_data, homework_questions_list, comments)
+        comment_message = make_comment(row_data, homework_questions_list, comments, ta)
         if push_grade:
             try:
                 post_grade(canvas_id, total_score, comment_message)
@@ -53,13 +54,15 @@ def process_grading_sheet(grades, push_grade):
             print(comment_message)
             print("--------------------")
 
-def make_comment(row_data, homework_questions, base_comment):
+def make_comment(row_data, homework_questions, base_comment, ta):
     comment = base_comment + "\n"
     for homework_question in homework_questions:
         score = str(homework_question) + ": " + str(row_data[homework_question].values.flatten()[0])
         comment += score + " | "
 
-    comment += "\n\nAny errors in grading need to be resolved within 1 week of this posting."
+    comment += "\n\n[{}] graded your assignemnt\n".format(ta)
+    comment += "\nAny errors in grading need to be resolved within 1 week of this posting."
+    comment += " Please direct all inquiries to the TA who graded the assignment."
 
     return comment
 
