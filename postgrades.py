@@ -10,10 +10,10 @@ import sys
 API_URL = "https://courseworks2.columbia.edu"
 
 # Canvas API key
-API_KEY = "1396~IRD9JnuAmX2mush0297wIRxhGOqREhYkqntq2nSo4vkG0mzrLyRDIKq9O9X6O3E5"
+API_KEY = None # should be string
 
 COURSE_ID_SECTION1 = "59635"
-ASSIGNMENT_ID_SECTION1 = ""
+ASSIGNMENT_ID_SECTION1 = "" # Passed in as an argument
 canvas = Canvas(API_URL, API_KEY)
 
 """ Takes in a csv sheet of grades (go to the excel sheet, File -> Download as --> .csv) that
@@ -35,7 +35,7 @@ def process_grading_sheet(grades, push_grade):
         canvas_id = grades['id'][i]
         total_score = grades['Total'][i]
         comments = grades['Comments'][i]
-        ta = geades['ta'][i]
+        ta = grades['ta'][i]
         if pd.isnull(comments):
             comments = "No comments from TAs."
         comments = "\n{}\n".format(comments)
@@ -60,9 +60,8 @@ def make_comment(row_data, homework_questions, base_comment, ta):
         score = str(homework_question) + ": " + str(row_data[homework_question].values.flatten()[0])
         comment += score + " | "
 
-    comment += "\n\n[{}] graded your assignemnt\n".format(ta)
+    comment += "\n\nPlease direct all inquiries to [{}] who graded the assignment.".format(ta)
     comment += "\nAny errors in grading need to be resolved within 1 week of this posting."
-    comment += " Please direct all inquiries to the TA who graded the assignment."
 
     return comment
 
