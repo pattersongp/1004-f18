@@ -23,7 +23,8 @@ Once you have installed Python and Pip, you need to install the following librar
 
 ### latehours.py
 ```
-usage: latehours.py [-h] -a ASSN_ID -d DUE_DATE [-p PUSH] [-l LATE_ID]
+usage: latehours.py [-h] -a ASSN_ID -d DUE_DATE -r ROSTER_FILENAME [-p PUSH]
+                    [-l LATE_ID]
 
 Updates the late hours against the submission times of the provided assignment
 id. Posts directly to CourseWorks after if argument -p is set
@@ -34,6 +35,8 @@ optional arguments:
                         Assignment id found on courseworks
   -d DUE_DATE, --due-date DUE_DATE
                         The date-time for due date: Y-m-d-H:M:S
+  -r ROSTER_FILENAME, --roster ROSTER_FILENAME
+                        The current roster downloaded from Courseworks
   -p PUSH, --push PUSH  Push update to courseworks
   -l LATE_ID, --late LATE_ID
                         Late Hours assignment ID
