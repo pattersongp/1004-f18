@@ -61,6 +61,13 @@ You need to provide information on students in the class (for this section, we'l
 
 ### postgrades.py
 Script for posting grades to canvas through the Canvas API.
+
+NOTE:
+Script expects your headers to look something like:
+```
+name,uni,id,ta,1.10 (5 pts),1.11 (5 pts), ... 3.33 (5 pts)	Comments	Total
+```
+
 ```
 usage: postgrades.py [-h] -f GRADING_SHEET -a ASSN_ID -p PUSH_GRADE
 
