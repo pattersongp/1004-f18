@@ -1,12 +1,15 @@
 from canvasapi.assignment import Assignment
 from canvasapi.requester import Requester
 from canvasapi import Canvas
+
+from grading_setup import make_roster
+
 from datetime import datetime, timedelta
 import argparse, math, sys
 
 # Canvas API URL and Key
 API_URL = "https://courseworks2.columbia.edu"
-API_KEY = "1396~IRD9JnuAmX2mush0297wIRxhGOqREhYkqntq2nSo4vkG0mzrLyRDIKq9O9X6O3E5"
+API_KEY =  None
 COURSE_ID = "59635" # YOU MUST FILL THIS IN
 GMT_EST_TIME_DIFFERENCE = 4
 
@@ -31,13 +34,21 @@ def compute_hours(submissions, due_date, curr_hours):
             cleaned_date = clean_date(sub.submitted_at)
             east_time = cleaned_date - timedelta(hours=GMT_EST_TIME_DIFFERENCE)
             due_date_stripped = datetime.strptime(due_date, "%Y-%m-%d-%H:%M:%S")
-            difference = east_time- due_date_stripped
+            difference = east_time - due_date_stripped
             hours_lost = int(math.ceil(abs(difference).total_seconds() / 3600.0))
-            new_hours = max(curr_hours[sub.user_id] - hours_lost, 0)
+            try:
+                hours = curr_hours[sub.user_id] - hours_lost
+                new_hours = max(hours, 0)
 
-            # store for updating later
-            student = { 'id':sub.user_id, 'hours_left':new_hours }
-            late_submissions.append(student)
+                if hours < 0:
+                    print("Student [{}] used [{}] extra hours!".format(sub.user_id, hours))
+
+                # store for updating later
+                student = { 'id':sub.user_id, 'hours_left':new_hours }
+                late_submissions.append(student)
+            except KeyError:
+                print("Unable to find current hours for: {}".format(sub.user_id))
+
     return late_submissions
 
 '''
@@ -47,15 +58,6 @@ def clean_date(submit_time):
     submit_time = submit_time.replace('T', '-')
     submit_time = submit_time.replace('Z', '')
     return datetime.strptime(submit_time, "%Y-%m-%d-%H:%M:%S")
-
-'''
-    Builds a dictionary of student id's and current late hours left
-'''
-def parse_hours(latehours):
-    curr_hours = dict()
-    for item in latehours:
-        to_add = { 'id':item.user_id, 'current':item.score }
-    return curr_hours
 
 '''
     Makes calls to Canvas API to update the grades
@@ -68,6 +70,18 @@ def update_courseworks(course_obj, comment, late_subs, latehours_id):
             comment = {'text_comment':comment},
             submission = {'posted_grade':item['hours_left']}
         )
+
+'''
+    Builds a dictionary of student id's and current late hours left
+'''
+def filter_roster(roster, latehours_id):
+    to_return = dict()
+    latehours_key = "Late Hours ({})".format(latehours_id)
+    for item in roster:
+        hours = int(float(item[latehours_key])) if item[latehours_key] else 170
+        student_id = int(item["ID"])
+        to_return[student_id] = hours
+    return to_return
 
 
 if __name__ == "__main__":
@@ -83,8 +97,11 @@ if __name__ == "__main__":
     parse.add_argument("-d", "--due-date", required=True,
                        help="The date-time for due date: Y-m-d-H:M:S",
                        dest="due_date")
+    parse.add_argument("-r", "--roster", required=True,
+                       help="The current roster downloaded from Courseworks",
+                       dest="roster_filename")
     parse.add_argument("-p", "--push", help="Push update to courseworks",
-                       default=False, dest="push")
+                       type=bool, default=False, dest="push")
     parse.add_argument("-l", "--late", help="Late Hours assignment ID",
                        dest="late_id")
     args = vars(parse.parse_args())
@@ -100,17 +117,18 @@ if __name__ == "__main__":
     # Setup paramaters
     assignment_id = args["assn_id"]
     latehours_id  = args["late_id"]
+    rost_filename = args["roster_filename"]
+    push          = args["push"]
 
     # Script starts here
     canvas = Canvas(API_URL, API_KEY)
     course = canvas.get_course(COURSE_ID)
     submissions = fetch_submissions(assignment_id)
-    curr_hours  = parse_hours(fetch_submissions(latehours_id))
 
-    print(curr_hours)
-    sys.exit()
-
-    late_subs   = compute_hours(submissions, args["due_date"], curr_hours)
+    roster = make_roster.read_csv(rost_filename)
+    # skip the first because its an extra line from CW
+    curr_hours = filter_roster(roster[2:], latehours_id)
+    late_subs  = compute_hours(submissions, args["due_date"], curr_hours)
 
     print("Planning to update:")
     for item in late_subs:
@@ -118,6 +136,7 @@ if __name__ == "__main__":
 
     # Only push to CourseWorks when ready
     if push:
-        update_courseworks(canvas, late_subs)
+        comment = "Deducting late hours for {}".format(assignment_id)
+        update_courseworks(course, comment, late_subs, latehours_id)
         sys.stdout.write("Successfully updated latehours for assignment".format(assignment_id))
 
