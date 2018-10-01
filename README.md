@@ -62,7 +62,23 @@ You need to provide information on students in the class (for this section, we'l
 ### postgrades.py
 Script for posting grades to canvas through the Canvas API.
 ```
-  Updating this script <-- 09 18 2018
+usage: postgrades.py [-h] -f GRADING_SHEET -a ASSN_ID -p PUSH_GRADE
+
+Program for posting grades to Canvas using the Canvas API. The last command
+line argument determines whether or not to push the grades to Canvas or do a
+trial run to see what the output would be. Note that the COURSE_ID_SECTION1
+global at the top is specific to the course that you're tryin to push grades
+to.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f GRADING_SHEET, --file GRADING_SHEET
+                        File with updated grades for postgrades.py to push to
+                        Canvas
+  -a ASSN_ID, --assn-id ASSN_ID
+                        Assignment ID
+  -p PUSH_GRADE, --push PUSH_GRADE
+                        post to Canvas True/False
 ```
 ### Misc
 
