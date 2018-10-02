@@ -10,13 +10,13 @@ import sys
 API_URL = "https://courseworks2.columbia.edu"
 
 # Canvas API key
-API_KEY = None # should be string
+API_KEY = None # YOU MUST FILL THIS IN AS A STRING
 
-COURSE_ID_SECTION1 = "59635"
-ASSIGNMENT_ID_SECTION1 = "" # Passed in as an argument
+COURSE_ID = "59635"
+ASSIGNMENT_ID = None # Passed in as an argument
 canvas = Canvas(API_URL, API_KEY)
 
-""" Takes in a csv sheet of grades (go to the excel sheet, File -> Download as --> .csv) that
+""" Takes in an excel sheet of grades (go to the excel sheet, File -> Download as --> .xlsx) that
 represents the grades and comments for a given homework and returns a dictionary with all the data.
 Namely, name, uni, canvas id, section number, total score, and comments """
 def process_grading_sheet(grades, push_grade):
@@ -28,6 +28,9 @@ def process_grading_sheet(grades, push_grade):
     # these two column names
     comment_index = column_headers.index("Comments")
     homework_questions_list = column_headers[late_index + 1: comment_index]
+
+    course = canvas.get_course(COURSE_ID)
+    assignment = course.get_assignment(ASSIGNMENT_ID)
 
     for i in rows:
         row_data = grades.iloc[[i]]
@@ -42,7 +45,10 @@ def process_grading_sheet(grades, push_grade):
         comment_message = make_comment(row_data, homework_questions_list, comments, ta)
         if push_grade:
             try:
-                post_grade(canvas_id, total_score, comment_message)
+                submission = assignment.get_submission(canvas_id)
+                submission.edit(
+                    comment={'text_comment': comment_message},
+                    submission={'posted_grade': total_score})
                 print("Pushed grade for " + name)
             except Exception as e:
                 print(e)
@@ -65,19 +71,6 @@ def make_comment(row_data, homework_questions, base_comment, ta):
 
     return comment
 
-def post_grade(canvas_id, total_score, comments):
-    #assume there's only two sections
-    course = canvas.get_course(COURSE_ID_SECTION1)
-    submissions = course.list_submissions(ASSIGNMENT_ID_SECTION1)
-    #posts a grade to Canvas along with the comments from the user.
-    #
-    # TODO
-    # update_submission is deprecated, need to change to Submission.something()
-    #
-    grade = course.update_submission(ASSIGNMENT_ID_SECTION1,canvas_id,
-    comment={'text_comment': comments}, submission={'posted_grade': total_score} )
-    return grade
-
 def _boolean_(string):
     if string not in {'False','True'}:
         raise ValueError('Not a valid boolean string')
@@ -91,7 +84,7 @@ if __name__ == "__main__":
                                     Canvas or do a trial run to see what the output
                                     would be.
 
-                                    Note that the COURSE_ID_SECTION1 global at the
+                                    Note that the COURSE_ID global at the
                                     top is specific to the course that you're tryin
                                     to push grades to.
                                     """, add_help=True, prog="postgrades.py")
@@ -109,17 +102,17 @@ if __name__ == "__main__":
     if not API_KEY:
         sys.stderr.write("Error: Need API key from Courseworks.\n")
         sys.exit(-1)
-    elif not COURSE_ID_SECTION1:
+    elif not COURSE_ID:
         sys.stderr.write("Error: Need course ID from Courseworks.\n")
         sys.exit(-1)
 
     # Setup paramaters
-    ASSIGNMENT_ID_SECTION1 = args["assn_id"]
+    ASSIGNMENT_ID = int(args["assn_id"])
     grading_sheet = args["grading_sheet"]
     push_grade = args["push_grade"]
 
     # process grading sheet and post grades to Courseworks
     process_grading_sheet(pd.read_excel(grading_sheet), push_grade)
 
-    sys.stdout.write("Successfully pushed grades for {} to canvas\n".format(ASSIGNMENT_ID_SECTION1))
+    sys.stdout.write("Successfully pushed grades for {} to canvas\n".format(ASSIGNMENT_ID))
 
