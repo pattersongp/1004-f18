@@ -1,22 +1,20 @@
-import argparse
-import sys
-import csv
 from canvasapi import Canvas
+
+import argparse, csv, json, sys
 
 '''
     A command line program for posting grades to Courseworks through the Canvas
     API.
 '''
 
-# Canvas API URL
-API_URL = "https://courseworks2.columbia.edu"
-API_KEY = None # Your Canvas API key goes here
-COURSE_ID = None # Course ID from Canvas
-ASSIGNMENT_ID = None # Passed in as an argument
+API_URL = None          # Canvas API URL
+API_KEY = None          # Your Canvas API key
+COURSE_ID = None        # Course ID from Canvas
+ASSIGNMENT_ID = None    # Assignment ID from Canvas
+CANVAS = None           # Will be initialized in main()
 PUSH_GRADE = False
-CANVAS = Canvas(API_URL, API_KEY)
 TA_COMMENT = '''\n
-Please direct all inquiries to {}, who graded your assignment.
+Please direct all inquiries to {}, the TA who graded your assignment.
 All requests need to be submitted within 1 week of this posting.'''
 
 '''
@@ -73,12 +71,23 @@ if __name__ == "__main__":
     PARSE.add_argument("-f", "--file", required=True,
                        help="File with updated grades for postgrades.py to push to Canvas",
                        dest="grading_sheet")
-    PARSE.add_argument("-a", "--assn-id", required=True, help="Assignment ID",
-                       dest="assn_id")
+    PARSE.add_argument("-e", "--env", required=True,
+                       help="JSON file that contains Canvas parameters",
+                       dest="env_fname")
     PARSE.add_argument("-p", "--push", default=False, type=_boolean_,
                        required=True, help="post to Canvas True/False",
                        dest="push_grade")
     ARGS = vars(PARSE.parse_args())
+
+    # Setup paramaters
+    with open(ARGS["env_fname"], 'r') as f:
+        data = json.loads(f.read())
+    API_URL = data['api_url']
+    API_KEY = data['api_key']
+    COURSE_ID = data['course_id']
+    ASSIGNMENT_ID = data['assn_id']
+    to_post = ARGS["grading_sheet"]
+    PUSH_GRADE = ARGS["push_grade"]
 
     # check API Key and course ID
     if not API_KEY:
@@ -88,12 +97,9 @@ if __name__ == "__main__":
         sys.stderr.write("Error: Need course ID from Courseworks.\n")
         sys.exit(-1)
 
-    # Setup paramaters
-    ASSIGNMENT_ID = int(ARGS["assn_id"])
-    to_post = ARGS["grading_sheet"]
-    PUSH_GRADE = ARGS["push_grade"]
+    CANVAS = Canvas(API_URL, API_KEY)
 
     # process grading sheet and post grades to Courseworks
     process_grading_sheet(to_post)
 
-    sys.stdout.write("Successfully pushed grades for {} to canvas\n".format(ASSIGNMENT_ID))
+    sys.stdout.write("Successfully pushed grades for {} to Canvas\n".format(ASSIGNMENT_ID))

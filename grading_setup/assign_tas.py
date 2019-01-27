@@ -79,5 +79,4 @@ if __name__ == "__main__":
 
     filename = args['output'] if args['output'] else 'ta-assignments.csv'
     write_csv(filename, roster,
-              fieldnames=list(annotated_roster[0].keys()) + ['Comments','Total'])
-
+              fieldnames=list(annotated_roster[0].keys()) + ['comments','total'])

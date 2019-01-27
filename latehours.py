@@ -1,24 +1,21 @@
+from canvasapi import Canvas
 from canvasapi.assignment import Assignment
 from canvasapi.requester import Requester
-from canvasapi import Canvas
-
-from grading_setup import make_roster
-
 from datetime import datetime, timedelta
-import argparse, math, sys
+from grading_setup import make_roster
+import argparse, math, json, sys
 
-# Canvas API URL and Key
-API_URL = "https://courseworks2.columbia.edu"
-API_KEY = "" # YOU MUST FILL THIS IN
-COURSE_ID = "" # YOU MUST FILL THIS IN
+API_URL = None          # Canvas API URL
+API_KEY = None          # Your Canvas API key
+COURSE_ID = None        # Course ID from Canvas
 GMT_EST_TIME_DIFFERENCE = 4
 
 '''
     Hits canvas API for submissions
-        WARNING: list_submissions is deprecated and will need to change soon
 '''
 def fetch_submissions(assn_id):
-    submissions = course.list_submissions(assn_id)
+    assn = course.get_assignment(assn_id)
+    submissions = assn.get_submissions()
     return submissions
 
 '''
@@ -60,16 +57,17 @@ def clean_date(submit_time):
     return datetime.strptime(submit_time, "%Y-%m-%d-%H:%M:%S")
 
 '''
-    Makes calls to Canvas API to update the grades
+    Makes calls to Canvas API to update the late hours
 '''
-def update_courseworks(course_obj, comment, late_subs, latehours_id):
+def update_courseworks(course, comment, late_subs, latehours_id):
+    latehours_assn = course.get_assignment(latehours_id)
+    latehours = {}
     for item in late_subs:
-        course_obj.update_submission(
-            latehours_id,
-            item['id'],
-            comment = {'text_comment':comment},
-            submission = {'posted_grade':item['hours_left']}
-        )
+        latehours[item['id']] = {
+            'posted_grade':item['hours_left'], 
+            'text_comment':comment
+        }
+    latehours_assn.submissions_bulk_update(grade_data=latehours)
 
 '''
     Builds a dictionary of student id's and current late hours left
@@ -78,33 +76,46 @@ def filter_roster(roster, latehours_id):
     to_return = dict()
     latehours_key = "Late Hours ({})".format(latehours_id)
     for item in roster:
-        hours = int(float(item[latehours_key])) if item[latehours_key] else 170
+        hours = int(float(item[latehours_key]))
         student_id = int(item["ID"])
         to_return[student_id] = hours
     return to_return
 
+def _boolean_(string):
+    if string not in {'False', 'True'}:
+        raise ValueError('Not a valid boolean string')
+    return string == 'True'
 
 if __name__ == "__main__":
     parse = argparse.ArgumentParser(description="""
             Updates the late hours against the submission times of the
             provided assignment id.
 
-            Posts directly to CourseWorks after if argument -p is set
-                                    """, add_help=True, prog="latehours.py")
-    parse.add_argument("-a", "--assignment", required=True,
-                       help="Assignment id found on courseworks",
-                       type=int, dest="assn_id")
+            Posts directly to CourseWorks after if argument -p is set.
+            """, add_help=True, prog="latehours.py")
     parse.add_argument("-d", "--due-date", required=True,
                        help="The date-time for due date: Y-m-d-H:M:S",
                        dest="due_date")
     parse.add_argument("-r", "--roster", required=True,
                        help="The current roster downloaded from Courseworks",
                        dest="roster_filename")
+    parse.add_argument("-e", "--env", required=True,
+                       help="JSON file that contains Canvas parameters",
+                       dest="env_fname")
     parse.add_argument("-p", "--push", help="Push update to courseworks",
-                       type=bool, default=False, dest="push")
-    parse.add_argument("-l", "--late", help="Late Hours assignment ID",
-                       dest="late_id")
+                       type=_boolean_, default=False, dest="push")
     args = vars(parse.parse_args())
+
+    # Setup paramaters
+    with open(args["env_fname"], 'r') as f:
+        data = json.loads(f.read())
+    API_URL = data['api_url']
+    API_KEY = data['api_key']
+    COURSE_ID = data['course_id']
+    assignment_id = data['assn_id']
+    latehours_id  = data['latehours_id']
+    rost_filename = args["roster_filename"]
+    push          = args["push"]
 
     # check API Key and course ID
     if not API_KEY:
@@ -113,12 +124,6 @@ if __name__ == "__main__":
     elif not COURSE_ID:
         sys.stderr.write("Error: Need course ID from Courseworks.\n")
         sys.exit(-1)
-
-    # Setup paramaters
-    assignment_id = args["assn_id"]
-    latehours_id  = args["late_id"]
-    rost_filename = args["roster_filename"]
-    push          = args["push"]
 
     # Script starts here
     canvas = Canvas(API_URL, API_KEY)
@@ -136,7 +141,8 @@ if __name__ == "__main__":
 
     # Only push to CourseWorks when ready
     if push:
+        print("Pushing updates...")
         comment = "Deducting late hours for {}".format(assignment_id)
         update_courseworks(course, comment, late_subs, latehours_id)
-        sys.stdout.write("Successfully updated latehours for assignment".format(assignment_id))
-
+        sys.stdout.write(
+            "Successfully updated late hours for assignment {}.\n".format(assignment_id))
