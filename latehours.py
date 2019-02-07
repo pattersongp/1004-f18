@@ -8,7 +8,7 @@ import argparse, math, json, sys
 API_URL = None          # Canvas API URL
 API_KEY = None          # Your Canvas API key
 COURSE_ID = None        # Course ID from Canvas
-GMT_EST_TIME_DIFFERENCE = 4
+GMT_EST_TIME_DIFFERENCE = 5
 
 '''
     Hits canvas API for submissions
