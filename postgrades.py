@@ -101,5 +101,5 @@ if __name__ == "__main__":
 
     # process grading sheet and post grades to Courseworks
     process_grading_sheet(to_post)
-
-    sys.stdout.write("Successfully pushed grades for {} to Canvas\n".format(ASSIGNMENT_ID))
+    if PUSH_GRADE:
+    	sys.stdout.write("Successfully pushed grades for {} to Canvas\n".format(ASSIGNMENT_ID))
