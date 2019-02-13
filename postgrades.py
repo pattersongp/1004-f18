@@ -15,7 +15,8 @@ CANVAS = None           # Will be initialized in main()
 PUSH_GRADE = False
 TA_COMMENT = '''\n
 Please direct all inquiries to {}, the TA who graded your assignment.
-All requests need to be submitted within 1 week of this posting.'''
+All requests need to be submitted within 1 week of this posting.
+\nDo not leave comments on Courseworks, we do not monitor these comments.'''
 
 '''
     Posts a grade and comment to Courseworks for a given csv
