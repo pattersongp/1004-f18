@@ -7,7 +7,7 @@ from make_roster import parse_roster, read_csv, write_csv
     @param ta_list {list of dictionaries}
     @param roster {list of dictionaries}
 '''
-def distribute_students(ta_list, roster):
+def distribute_students(ta_list, roster, even=False):
     random.shuffle(ta_list)
     expected = len(roster) // len(ta_list)
     leftovers = len(roster) % len(ta_list)
@@ -16,21 +16,23 @@ def distribute_students(ta_list, roster):
     for ta in ta_list:
         ta['assigned'] = expected
 
-    # Give half of HTA's students to TA's
-    leftovers += expected
-    if expected % 2 == 1:
-        leftovers += 1
-        expected  -= 1
+    if not even:
+        # Give half of HTA's students to TA's
+        leftovers += (expected // 2) # fixes bug if 1 hta
+        if expected % 2 == 1:
+            leftovers += 1
+            expected  -= 1
 
-    # reduce HTA's assigned students
-    for ta in ta_list:
-        if ta['type'] == 'hta':
-            ta['assigned'] = expected // 2
+        # reduce HTA's assigned students
+        for ta in ta_list:
+            if ta['type'] == 'hta':
+                ta['assigned'] = expected // 2
 
     # Distribute leftovers to TA's
     while leftovers > 0:
         for ta in ta_list:
-            if ta['type'] != 'hta' and leftovers > 0:
+            # if ta['type'] != 'hta' and leftovers > 0:
+            if leftovers > 0:
                 ta['assigned'] += 1
                 leftovers -= 1
 
@@ -52,7 +54,7 @@ def assign_tas(ta_list, roster):
                 current_student += 1
                 ta['assigned'] -= 1
             except IndexError:
-                sys.stderr.write("Error when assigning TA's:\nTA:{} Student Index{}\n"
+                sys.stderr.write("Error when assigning TA's:\nTA: {} Student Index {}\n"
                                  .format(ta, current_student))
     return roster
 
@@ -74,7 +76,7 @@ if __name__ == "__main__":
                          .format(args['student_roster'],args['ta_roster']))
         sys.exit(-1)
 
-    ta_list = distribute_students(ta_roster,roster)
+    ta_list = distribute_students(ta_roster,roster, True) #even=True
     annotated_roster = assign_tas(ta_list, roster)
 
     filename = args['output'] if args['output'] else 'ta-assignments.csv'
