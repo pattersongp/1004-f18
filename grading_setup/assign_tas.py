@@ -1,4 +1,5 @@
 import argparse, random, sys
+from random import shuffle
 from make_roster import parse_roster, read_csv, write_csv
 
 '''
@@ -46,6 +47,10 @@ def distribute_students(ta_list, roster, even=False):
     @param roster {list of dictionaries}
 '''
 def assign_tas(ta_list, roster):
+
+    # shuffle the students
+    shuffle(roster)
+
     current_student = 0
     for ta in ta_list:
         while ta['assigned'] > 0:
